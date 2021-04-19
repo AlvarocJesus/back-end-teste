@@ -38,18 +38,37 @@ export default {
         code
       } = req.body;
 
+      const data = {
+        model,
+        price,
+        brand,
+        startDate,
+        endDate,
+        color,//: color === 'BLACK' || 'WHITE' || 'GOLD' || 'PINK',
+        code
+      };
+
       const schema = Yup.object().shape({
-        model: Yup.string().min(2).max(255).strict(),
-        price: Yup.number().positive(),
-        brand: Yup.string().min(2).max(255).strict(),
+        model: Yup.string().min(2).max(255).strict().required(), //funcionou
+        price: Yup.number().positive().required(), //funcionou
+        brand: Yup.string().min(2).max(255).strict().required(), //funcionou
         // startDate: Yup.date().min("25/12/2018"),
         // endDate: Yup.date(),
-        startDate: Yup.date().min(
-          Yup.ref('2018-12-25'), "a data de inicio da venda não pode ser anterior à 25/12/2018"),
+        startDate: Yup.date()
+          .required(),
+          // .min(
+          //   Yup.ref('25-12-2018'),
+          //   "a data de inicio da venda não pode ser anterior à 25/12/2018"
+          // ),
         endDate: Yup.date().min(
-          Yup.ref('startDate'), "a data de fim da venda não pode ser anterior à data de início"),
-        color: Yup.string().equals(['BLACK', 'WHITE', 'GOLD', 'PINK']),
-        code: Yup.string().max(8)
+          Yup.ref('startDate'), "a data de fim da venda não pode ser anterior à data de início")
+          .required(),
+        color: Yup.string().required(), //.equals(['BLACK', 'WHITE', 'GOLD', 'PINK'])
+        code: Yup.string().min(8).max(8).required() //funcionou
+      })
+
+      await schema.validate(data, {
+        abortEarly: false,
       })
 
       /* const dateMin = new Date(2018, 12, 25);
@@ -75,15 +94,7 @@ export default {
       } else{
         return res.json("Preço precisa ser um valor positivo.")
       } */
-      console.log({
-        model,
-        price,
-        brand,
-        startDate,
-        endDate,
-        color,
-        code
-      })
+      console.log(data);
 
       // return res.status(201).json("Celular adicionado com sucesso!");
       return res.json("Celular adicionado com sucesso!");
