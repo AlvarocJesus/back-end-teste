@@ -1,13 +1,14 @@
 import { Request, Response } from 'express';
 import * as Yup from 'yup';
+
 import { connection } from '../database/connection';
 
 interface PhoneBody{
   model: string, //Alfanumérico com no mínimo 2 e no máximo 255 caracteres, desprezando espaço em branco.
   price: number, //positivo
   brand: string, //Alfanumérico com no mínimo 2 e no máximo 255 caracteres, desprezando espaço em branco.
-  startDate: Date, //Data no formato “dd/MM/yyyy” (31/12/2018). A data de início deve ser posterior ao dia 25/12/2018.
-  endDate: Date, //Data no formato “dd/MM/yyyy” (31/12/2018). A data de fim deve ser posterior a data de início.
+  startDate: string, //Data no formato “dd/MM/yyyy” (31/12/2018). A data de início deve ser posterior ao dia 25/12/2018.
+  endDate: string, //Data no formato “dd/MM/yyyy” (31/12/2018). A data de fim deve ser posterior a data de início.
   color: 'BLACK' | 'WHITE' | 'GOLD' | 'PINK',
   code: string
 }
@@ -28,7 +29,7 @@ export default {
 
   async create(req: Request, res: Response){
     try{
-      const {
+      /* const {
         model,
         price,
         brand,
@@ -36,68 +37,47 @@ export default {
         endDate,
         color,
         code
-      } = req.body;
+      } = req.body; */
 
-      const data = {
-        model,
-        price,
-        brand,
-        startDate,
-        endDate,
-        color,//: color === 'BLACK' || 'WHITE' || 'GOLD' || 'PINK',
-        code
-      };
+      const data : PhoneBody = req.body;
 
-      const schema = Yup.object().shape({
-        model: Yup.string().min(2).max(255).strict().required(), //funcionou
-        price: Yup.number().positive().required(), //funcionou
-        brand: Yup.string().min(2).max(255).strict().required(), //funcionou
-        // startDate: Yup.date().min("25/12/2018"),
-        // endDate: Yup.date(),
-        startDate: Yup.date()
+      const dateMin = '25/12/2018';
+
+      if (data.startDate > dateMin) {
+        if((data.price > 0) && (data.price !== null)){
+					await connection('smartphone').insert(data);
+
+          console.log(data);
+
+				  return res.status(201).json("Celular adicionado com sucesso!");
+				} else {
+          return res.json({ Error: 'Preço precisa ser um valor maior do que 0(zero)' })
+				}
+      } else {
+        return res.json({ Error: 'A data de inicio das vendas precisa ser posterior à 25/12/2018' })
+			}
+
+      /* const schema = Yup.object({
+        model: Yup.string().min(2).max(255).strict().required(),
+        price: Yup.number().positive().required(),
+        brand: Yup.string().min(2).max(255).strict().required(),
+        startDate: Yup.string()
           .required(),
-          // .min(
-          //   Yup.ref('25-12-2018'),
-          //   "a data de inicio da venda não pode ser anterior à 25/12/2018"
-          // ),
-        endDate: Yup.date().min(
-          Yup.ref('startDate'), "a data de fim da venda não pode ser anterior à data de início")
-          .required(),
+          .min(
+            Yup.ref(dateMin),
+            "a data de inicio da venda não pode ser anterior à 25/12/2018"
+          ),
+        endDate: Yup.string().min(
+          Yup.ref('startDate'), "a data de fim da venda não pode ser anterior à data de início"),
         color: Yup.string().required(), //.equals(['BLACK', 'WHITE', 'GOLD', 'PINK'])
-        code: Yup.string().min(8).max(8).required() //funcionou
-      })
+        code: Yup.string().min(8).max(8).required()
+      });
 
       await schema.validate(data, {
         abortEarly: false,
-      })
+      }) */
 
-      /* const dateMin = new Date(2018, 12, 25);
-      const dateInicial = new Date(startDate);
-      const dateFinish = new Date(endDate);
-
-      if (dateInicial > dateMin) {
-        console.log(dateInicial);
-        console.log(dateFinish);
-      } */
-
-      /* if(price > 0){
-        await connection('smartphone')
-        .insert({
-          model,
-          price,
-          brand,
-          startDate,
-          endDate,
-          color,
-          code
-        });
-      } else{
-        return res.json("Preço precisa ser um valor positivo.")
-      } */
-      console.log(data);
-
-      // return res.status(201).json("Celular adicionado com sucesso!");
-      return res.json("Celular adicionado com sucesso!");
+      // await connection('smartphone').insert(data);
     } catch(err){
       console.log(err);
       return res.send(err);
