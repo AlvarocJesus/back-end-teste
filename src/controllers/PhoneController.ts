@@ -7,9 +7,17 @@ interface PhoneBody{
   price: number,
   brand: string,
   startDate: string,
-  dateEnd: string,
+  endDate: string,
   color: 'BLACK' | 'WHITE' | 'GOLD' | 'PINK',
   code: string
+}
+
+interface UpdatePhoneBody{
+  model: string,
+  price: number,
+  brand: string,
+  endDate: string,
+  color: 'BLACK' | 'WHITE' | 'GOLD' | 'PINK',
 }
 
 export default {
@@ -71,26 +79,27 @@ export default {
 
   async update(req: Request, res: Response, next: NextFunction){
     try{
-      const {
-        model,
-        price,
-        brand,
-        dateEnd,
-        color,
-      } = req.body;
+      const data: UpdatePhoneBody = req.body;
       const { code } = req.params;
 
-      await connection('smartphone')
-        .update({
-          model,
-          price,
-          brand,
-          dateEnd,
-          color,
-        })
-        .where({ code });
+      var arrDataEnd = data.endDate.split('/');
+      var stringFormatEnd = arrDataEnd[1] + '-' + arrDataEnd[0] + '-' + arrDataEnd[2];
+      const endDate = new Date(stringFormatEnd);
 
-        return res.status(201).json("Dados atualizados!");
+      if((data.price > 0) && (data.price !== null)){
+        if((data.color === 'BLACK') || (data.color === 'GOLD') || (data.color === 'PINK') || (data.color === 'WHITE')){
+          await connection('smartphone')
+            .update(data)
+            .where({ code });
+
+          return res.status(201).json("Dados atualizados!");
+        } else{
+          return res.json({ Error: 'A cor precisa ser BLACK, GOLD, PINK ou WHITE' });
+        }
+          
+			} else {
+        return res.json({ Error: 'Preço precisa ser um valor maior do que 0(zero)' })
+			}
     } catch(err){
       next(err)
     }
